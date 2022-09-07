@@ -1,19 +1,27 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import React, { useState } from "react";
+import { useRouter } from "next/router";
+import React, { useContext, useState } from "react";
+import { UserContext } from "../context/UserContext";
 import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
   const [username, setUsername] = useState<string>();
+  const { setUser } = useContext(UserContext);
   const createUser = trpc.useMutation("user.createUser");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!username) return;
     // Invoke tRPC mutation
-    await createUser.mutateAsync({
+    const myUser = await createUser.mutateAsync({
       name: username,
     });
+
+    // 1. Save user id in global state (with context?)
+    setUser(myUser);
+    router.push("/dashboard");
   };
 
   const handleSetUsername = (e: React.ChangeEvent<HTMLInputElement>) => {

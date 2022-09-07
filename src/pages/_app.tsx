@@ -1,14 +1,25 @@
 // src/pages/_app.tsx
+import { User } from "@prisma/client";
 import { httpBatchLink } from "@trpc/client/links/httpBatchLink";
 import { loggerLink } from "@trpc/client/links/loggerLink";
 import { withTRPC } from "@trpc/next";
 import type { AppType } from "next/dist/shared/lib/utils";
+import { useState } from "react";
 import superjson from "superjson";
+import { UserContext } from "../context/UserContext";
 import type { AppRouter } from "../server/router";
 import "../styles/globals.css";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
-  return <Component {...pageProps} />;
+  const [user, setUser] = useState<User>({
+    id: "",
+    name: "",
+  });
+  return (
+    <UserContext.Provider value={{ user, setUser }}>
+      <Component {...pageProps} />
+    </UserContext.Provider>
+  );
 };
 
 const getBaseUrl = () => {
