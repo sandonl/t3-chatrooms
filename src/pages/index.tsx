@@ -2,6 +2,7 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
+import { Button, Variant } from "../components/Button";
 import { UserContext } from "../context/UserContext";
 import { trpc } from "../utils/trpc";
 
@@ -46,12 +47,7 @@ const Home: NextPage = () => {
             className="p-2 text-xl border rounded-sm"
             placeholder="Username"
           />
-          <button
-            className="text-xl m-2 bg-blue-300 hover:bg-blue-200
-          p-2 rounded text-white"
-          >
-            Sign In
-          </button>
+          <Button variant={Variant.Primary}> Sign In </Button>
         </form>
       </main>
     </>
