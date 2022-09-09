@@ -35,6 +35,7 @@ export const CreateRoomModal = ({
           <Dialog.Title className="text-xl">Create a New Room</Dialog.Title>
 
           <input
+            value={roomName}
             onChange={handleOnRoomNameChange}
             placeholder="Your room name"
             className="border"

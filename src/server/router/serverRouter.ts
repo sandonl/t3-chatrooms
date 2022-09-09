@@ -1,5 +1,6 @@
 import { createRouter } from "./context";
 import { z } from "zod";
+import { RtmTokenBuilder, RtmRole } from "agora-access-token";
 
 export const serverRouter = createRouter()
   .query("getRooms", {
@@ -28,5 +29,29 @@ export const serverRouter = createRouter()
         },
       });
       return newRoom;
+    },
+  })
+  .mutation("joinRoom", {
+    input: z.object({
+      userId: z.string(),
+      roomId: z.string(),
+    }),
+    async resolve({ input, ctx }) {
+      const appID = process.env.AGORA_ID!;
+      const appCertificate = process.env.AGORA_CERT!;
+      const account = input.userId;
+
+      const expirationTimeInSeconds = 3600;
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+
+      const token = RtmTokenBuilder.buildToken(
+        appID,
+        appCertificate,
+        account,
+        RtmRole.Rtm_User,
+        privilegeExpiredTs
+      );
+      return token;
     },
   });

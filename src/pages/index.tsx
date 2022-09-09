@@ -43,6 +43,7 @@ const Home: NextPage = () => {
         </h1>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <input
+            value={username}
             onChange={handleSetUsername}
             className="p-2 text-xl border rounded-sm"
             placeholder="Username"

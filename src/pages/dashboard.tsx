@@ -1,5 +1,7 @@
+import { router } from "@trpc/server";
 import { NextPage } from "next";
-import { useContext, useState } from "react";
+import { useRouter } from "next/router";
+import { useContext, useEffect, useState } from "react";
 import { Button, Variant } from "../components/Button";
 import { ChatPanel } from "../components/dashboard/ChatPanel";
 import { CreateRoomModal } from "../components/dashboard/CreateRoomModal";
@@ -7,7 +9,7 @@ import { UserContext } from "../context/UserContext";
 import { serverRouter } from "../server/router/serverRouter";
 import { trpc } from "../utils/trpc";
 
-const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4";
+const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4"; // TODO: remove
 
 const DashboardPage: NextPage = () => {
   const { user } = useContext(UserContext);
@@ -16,6 +18,13 @@ const DashboardPage: NextPage = () => {
   const getServers = trpc.useQuery(["user.getServers", { userId: user.id }]);
   const createRoom = trpc.useMutation(["server.createRoom"]);
   const getRooms = trpc.useQuery(["server.getRooms", { serverId: SERVER_ID }]);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user.id) {
+      router.push("/");
+    }
+  }, [router, user]);
 
   const handleShowCreateRoomModal = () => {
     setShowCreateRoomModal(true);
