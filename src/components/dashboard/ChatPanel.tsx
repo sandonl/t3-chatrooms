@@ -5,10 +5,14 @@ import { trpc } from "../../utils/trpc";
 import { Button, Variant } from "../Button";
 
 type ChatPanelProps = {
-  selectedRoom: string | undefined;
+  selectedRoomName: string;
+  selectedRoomId: string;
 };
 
-export const ChatPanel = ({ selectedRoom }: ChatPanelProps) => {
+export const ChatPanel = ({
+  selectedRoomName,
+  selectedRoomId,
+}: ChatPanelProps) => {
   const { user } = useContext(UserContext);
   const [text, setText] = useState<string>();
   const [messages, setMessages] = useState<any[]>([]);
@@ -35,13 +39,11 @@ export const ChatPanel = ({ selectedRoom }: ChatPanelProps) => {
 
   useEffect(() => {
     const connectToRoom = async () => {
-      if (!selectedRoom) return;
-
       const { default: AgoraRTM } = await import("agora-rtm-sdk");
 
       const token = await joinRoom.mutateAsync({
         userId: user.id,
-        roomId: selectedRoom,
+        roomId: selectedRoomId,
       });
 
       // Create Agora client
@@ -52,7 +54,7 @@ export const ChatPanel = ({ selectedRoom }: ChatPanelProps) => {
         token,
       });
 
-      const channel = await client.createChannel(selectedRoom);
+      const channel = await client.createChannel(selectedRoomId);
       await channel.join();
 
       channel.on("ChannelMessage", (message, peerId) => {
@@ -81,24 +83,36 @@ export const ChatPanel = ({ selectedRoom }: ChatPanelProps) => {
         setRoomChannel(undefined);
       });
     };
-  }, [selectedRoom]);
+  }, [selectedRoomId]);
 
-  if (!selectedRoom) return null;
+  if (!selectedRoomId) return null;
 
   return (
     <div>
-      <div>Chat Panel {selectedRoom} </div>
-      {messages.map((message, idx) => (
-        <div key={idx}> {message.text} </div>
-      ))}
-      <input
-        onChange={handleChatTyped}
-        value={text}
-        placeholder="Type a message here."
-      />
-      <Button onClick={handleSendMessage} variant={Variant.Primary}>
-        Send
-      </Button>
+      <div>
+        Current Room:
+        <span className="text-blue-400 font-bold"> {selectedRoomName} </span>
+      </div>
+      <div className="h-56 bg-white rounded-md w-11/12 border m-1">
+        {messages.map((message, idx) => (
+          <div key={idx} className="px-4 py-2">
+            {message.text}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-4 middle p-4 align-text-bottom items-center">
+        <div> {user.name}</div>
+        <input
+          onChange={handleChatTyped}
+          value={text}
+          placeholder="Type a message here."
+          className="h-10 rounded-md p-4 flex-grow border"
+        />
+        <Button onClick={handleSendMessage} variant={Variant.Primary}>
+          Send
+        </Button>
+      </div>
     </div>
   );
 };

@@ -20,7 +20,7 @@ export const Button = ({ children, variant, ...props }: ButtonProps) => {
   return (
     <button
       {...props}
-      className={`text-xl m-2 
+      className={`text-md m-2 
           p-2 rounded text-white ${variantColors[variant]}`}
     >
       {children}

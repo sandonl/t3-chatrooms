@@ -1,3 +1,4 @@
+import { Room } from "@prisma/client";
 import { router } from "@trpc/server";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -14,7 +15,8 @@ const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4"; // TODO: remove
 const DashboardPage: NextPage = () => {
   const { user } = useContext(UserContext);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
+  const [selectedRoomName, setSelectedRoomName] = useState<string>("");
   const getServers = trpc.useQuery(["user.getServers", { userId: user.id }]);
   const createRoom = trpc.useMutation(["server.createRoom"]);
   const getRooms = trpc.useQuery(["server.getRooms", { serverId: SERVER_ID }]);
@@ -42,8 +44,9 @@ const DashboardPage: NextPage = () => {
     await getRooms.refetch();
   };
 
-  const handleRoomSelected = (roomId: string) => {
-    setSelectedRoom(roomId);
+  const handleRoomSelected = (room: Room) => {
+    setSelectedRoomId(room.id);
+    setSelectedRoomName(room.name);
   };
 
   return (
@@ -68,7 +71,7 @@ const DashboardPage: NextPage = () => {
               <div key={room.id}>
                 <button
                   className="hover:text-blue-100"
-                  onClick={() => handleRoomSelected(room.id)}
+                  onClick={() => handleRoomSelected(room)}
                 >
                   {room.name}
                 </button>
@@ -80,7 +83,12 @@ const DashboardPage: NextPage = () => {
           </Button>
         </div>
         <div className="flex-grow bg-gray-300 h-full p-4">
-          <ChatPanel selectedRoom={selectedRoom} />
+          {selectedRoomId && selectedRoomName && (
+            <ChatPanel
+              selectedRoomName={selectedRoomName}
+              selectedRoomId={selectedRoomId}
+            />
+          )}
         </div>
       </div>
       <CreateRoomModal
