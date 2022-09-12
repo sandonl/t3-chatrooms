@@ -16,6 +16,19 @@ export const serverRouter = createRouter()
       return rooms;
     },
   })
+  .query("getUsers", {
+    input: z.object({
+      roomId: z.string(),
+    }),
+    async resolve({ input, ctx }) {
+      const usersInRoom = ctx.prisma.user.findMany({
+        where: {
+          roomId: input.roomId,
+        },
+      });
+      return usersInRoom;
+    },
+  })
   .mutation("createRoom", {
     input: z.object({
       name: z.string(),
@@ -52,6 +65,14 @@ export const serverRouter = createRouter()
         RtmRole.Rtm_User,
         privilegeExpiredTs
       );
+      await ctx.prisma.user.update({
+        where: {
+          id: input.userId,
+        },
+        data: {
+          roomId: input.roomId,
+        },
+      });
       return token;
     },
   });

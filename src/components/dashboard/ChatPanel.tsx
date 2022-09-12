@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../context/UserContext";
 import { trpc } from "../../utils/trpc";
 import { Button, Variant } from "../Button";
+import { UserPanel } from "./UserPanel";
 
 type ChatPanelProps = {
   selectedRoomName: string;
@@ -28,11 +29,11 @@ export const ChatPanel = ({
     if (!text) return;
     roomChannel.sendMessage({ text: text });
     setMessages((prevMessages) => [
-      ...prevMessages,
       {
         text,
         userId: user.id,
       },
+      ...prevMessages,
     ]);
     setText("");
   };
@@ -60,11 +61,11 @@ export const ChatPanel = ({
       channel.on("ChannelMessage", (message, peerId) => {
         // Track messages
         setMessages((prevMessages) => [
-          ...prevMessages,
           {
             text: message.text,
             userId: peerId,
           },
+          ...prevMessages,
         ]);
       });
       setRoomChannel(channel);
@@ -88,31 +89,34 @@ export const ChatPanel = ({
   if (!selectedRoomId) return null;
 
   return (
-    <div>
-      <div>
-        Current Room:
-        <span className="text-blue-400 font-bold"> {selectedRoomName} </span>
-      </div>
-      <div className="h-56 bg-white rounded-md w-11/12 border m-1">
-        {messages.map((message, idx) => (
-          <div key={idx} className="px-4 py-2">
-            {message.text}
-          </div>
-        ))}
-      </div>
+    <div className="flex gap-4">
+      <div className="w-8/12">
+        <div>
+          Current Room:
+          <span className="text-blue-400 font-bold"> {selectedRoomName} </span>
+        </div>
+        <div className="h-56 bg-white rounded-md w-11/12 border m-1 flex flex-col-reverse">
+          {messages.map((message, idx) => (
+            <div key={idx} className="px-4 py-2">
+              {message.text}
+            </div>
+          ))}
+        </div>
 
-      <div className="flex gap-4 middle p-4 align-text-bottom items-center">
-        <div> {user.name}</div>
-        <input
-          onChange={handleChatTyped}
-          value={text}
-          placeholder="Type a message here."
-          className="h-10 rounded-md p-4 flex-grow border"
-        />
-        <Button onClick={handleSendMessage} variant={Variant.Primary}>
-          Send
-        </Button>
+        <div className="flex gap-4 middle p-4 align-text-bottom items-center">
+          <div> {user.name}</div>
+          <input
+            onChange={handleChatTyped}
+            value={text}
+            placeholder="Type a message here."
+            className="h-10 rounded-md p-4 flex-grow border"
+          />
+          <Button onClick={handleSendMessage} variant={Variant.Primary}>
+            Send
+          </Button>
+        </div>
       </div>
+      <UserPanel selectedRoomId={selectedRoomId} />
     </div>
   );
 };

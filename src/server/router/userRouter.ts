@@ -25,7 +25,6 @@ export const userRouter = createRouter()
           name: input.name,
         },
       });
-
       if (existingUser) {
         return existingUser;
       } else {
