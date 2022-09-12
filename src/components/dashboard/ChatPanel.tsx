@@ -1,4 +1,4 @@
-import { RtmChannel } from "agora-rtm-sdk";
+import { RtmChannel, RtmClient } from "agora-rtm-sdk";
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../context/UserContext";
 import { trpc } from "../../utils/trpc";
@@ -8,7 +8,7 @@ import { UserPanel } from "./UserPanel";
 type ChatPanelProps = {
   selectedRoomName: string;
   selectedRoomId: string;
-  token: string;
+  client: RtmClient;
 };
 
 type Message = {
@@ -20,12 +20,27 @@ type Message = {
 export const ChatPanel = ({
   selectedRoomName,
   selectedRoomId,
-  token,
+  client,
 }: ChatPanelProps) => {
   const { user } = useContext(UserContext);
-  const [text, setText] = useState<string>();
+  const [text, setText] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [roomChannel, setRoomChannel] = useState<RtmChannel>();
+  const sendMessage = trpc.useMutation(["room.saveMessage"]);
+  const getMessage = trpc.useQuery(
+    [
+      "room.getMessages",
+      {
+        roomId: selectedRoomId,
+      },
+    ],
+    {
+      enabled: false,
+      onSuccess: (initialMessages: Message[]) => {
+        setMessages(initialMessages);
+      },
+    }
+  );
 
   const handleChatTyped = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -42,6 +57,12 @@ export const ChatPanel = ({
         name: user.name,
       }),
     });
+    sendMessage.mutate({
+      roomId: selectedRoomId,
+      text,
+      userId: user.id,
+      name: user.name,
+    });
     setMessages((prevMessages) => [
       {
         text,
@@ -55,20 +76,11 @@ export const ChatPanel = ({
 
   useEffect(() => {
     const connectToRoom = async () => {
-      const { default: AgoraRTM } = await import("agora-rtm-sdk");
-
-      // Create Agora client
-      const client = AgoraRTM.createInstance(process.env.NEXT_PUBLIC_AGORA_ID!);
-      // Login with user ID
-      await client.login({
-        uid: user.id,
-        token,
-      });
-
+      await getMessage.refetch();
       const channel = await client.createChannel(selectedRoomId);
       await channel.join();
 
-      channel.on("ChannelMessage", (message, peerId) => {
+      channel.on("ChannelMessage", (message) => {
         // Track messages
         if (!message.text) return;
         const messageObj = JSON.parse(message.text);
@@ -80,7 +92,7 @@ export const ChatPanel = ({
         ]);
       });
       setRoomChannel(channel);
-      return { client, channel };
+      return { channel };
     };
 
     const clientPromise = connectToRoom();
@@ -89,10 +101,10 @@ export const ChatPanel = ({
     return () => {
       clientPromise.then(async (context) => {
         if (!context) return;
-        const { channel, client } = context;
+        const { channel } = context;
         await channel.leave();
-        await client.logout();
         setRoomChannel(undefined);
+        // setMessages([]);
       });
     };
   }, [selectedRoomId]);
@@ -100,13 +112,13 @@ export const ChatPanel = ({
   if (!selectedRoomId) return null;
 
   return (
-    <div className="flex gap-4">
-      <div className="w-8/12">
+    <div className="flex gap-4 h-full justify-center">
+      <div className="w-8/12 p-4">
         <div>
           Current Room:
           <span className="text-blue-400 font-bold"> {selectedRoomName} </span>
         </div>
-        <div className="h-56 bg-white rounded-md w-11/12 border m-1 flex flex-col-reverse">
+        <div className="h-56 bg-white rounded-md w-11/12 border m-1 flex flex-col-reverse overflow-auto">
           {messages.map((message, idx) => (
             <div key={idx} className="px-4 py-2">
               {message.name}: {message.text}

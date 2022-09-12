@@ -7,7 +7,7 @@ import { UserContext } from "../context/UserContext";
 import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
-  const [username, setUsername] = useState<string>();
+  const [username, setUsername] = useState<string>("");
   const { setUser } = useContext(UserContext);
   const createUser = trpc.useMutation("user.createUser");
   const router = useRouter();

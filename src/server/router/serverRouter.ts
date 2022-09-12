@@ -44,12 +44,11 @@ export const serverRouter = createRouter()
       return newRoom;
     },
   })
-  .mutation("joinRoom", {
+  .mutation("getToken", {
     input: z.object({
       userId: z.string(),
-      roomId: z.string(),
     }),
-    async resolve({ input, ctx }) {
+    async resolve({ input }) {
       const appID = process.env.AGORA_ID!;
       const appCertificate = process.env.AGORA_CERT!;
       const account = input.userId;
@@ -65,6 +64,15 @@ export const serverRouter = createRouter()
         RtmRole.Rtm_User,
         privilegeExpiredTs
       );
+      return token;
+    },
+  })
+  .mutation("joinRoom", {
+    input: z.object({
+      userId: z.string(),
+      roomId: z.string(),
+    }),
+    async resolve({ input, ctx }) {
       await ctx.prisma.user.update({
         where: {
           id: input.userId,
@@ -73,6 +81,5 @@ export const serverRouter = createRouter()
           roomId: input.roomId,
         },
       });
-      return token;
     },
   });

@@ -1,5 +1,6 @@
 import { Room } from "@prisma/client";
 import { router } from "@trpc/server";
+import AgoraRTM, { RtmClient } from "agora-rtm-sdk";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import { Button, Variant } from "../components/Button";
 import { ChatPanel } from "../components/dashboard/ChatPanel";
 import { CreateRoomModal } from "../components/dashboard/CreateRoomModal";
 import { UserContext } from "../context/UserContext";
+import { roomRouter } from "../server/router/roomRouter";
 import { serverRouter } from "../server/router/serverRouter";
 import { trpc } from "../utils/trpc";
 
@@ -17,10 +19,11 @@ const DashboardPage: NextPage = () => {
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [selectedRoomName, setSelectedRoomName] = useState<string>("");
-  const [token, setToken] = useState<string>();
   const getServers = trpc.useQuery(["user.getServers", { userId: user.id }]);
   const createRoom = trpc.useMutation(["server.createRoom"]);
   const joinRoom = trpc.useMutation("server.joinRoom");
+  const getToken = trpc.useMutation("server.getToken");
+  const [client, setClient] = useState<RtmClient>();
   const getRooms = trpc.useQuery(["server.getRooms", { serverId: SERVER_ID }]);
   const router = useRouter();
 
@@ -29,6 +32,36 @@ const DashboardPage: NextPage = () => {
       router.push("/");
     }
   }, [router, user]);
+
+  useEffect(() => {
+    if (!user.id) return;
+    const login = async () => {
+      const token = await getToken.mutateAsync({
+        userId: user.id,
+      });
+      const { default: AgoraRTM } = await import("agora-rtm-sdk");
+
+      // Create Agora client
+      const client = AgoraRTM.createInstance(process.env.NEXT_PUBLIC_AGORA_ID!);
+      // Login with user ID
+      await client.login({
+        uid: user.id,
+        token,
+      });
+      setClient(client);
+      return client;
+    };
+    const loginPromise = login();
+
+    return () => {
+      const logout = async () => {
+        const client = await loginPromise;
+        await client.logout();
+        setClient(undefined);
+      };
+      logout();
+    };
+  }, [user]);
 
   const handleShowCreateRoomModal = () => {
     setShowCreateRoomModal(true);
@@ -47,15 +80,15 @@ const DashboardPage: NextPage = () => {
   };
 
   const handleRoomSelected = async (room: Room) => {
-    const token = await joinRoom.mutateAsync({
-      userId: user.id,
-      roomId: room.id,
-    });
-
     setSelectedRoomId(room.id);
     setSelectedRoomName(room.name);
-    setToken(token);
+    await joinRoom.mutateAsync({
+      roomId: room.id,
+      userId: user.id,
+    });
   };
+
+  const showChatPanel = selectedRoomId && selectedRoomName && client;
 
   return (
     <>
@@ -90,10 +123,10 @@ const DashboardPage: NextPage = () => {
             Create Room
           </Button>
         </div>
-        <div className="flex-grow bg-gray-300 h-full p-4">
-          {selectedRoomId && selectedRoomName && token && (
+        <div className="flex-grow bg-gray-300 h-full">
+          {showChatPanel && (
             <ChatPanel
-              token={token}
+              client={client}
               selectedRoomName={selectedRoomName}
               selectedRoomId={selectedRoomId}
             />
