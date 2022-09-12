@@ -17,8 +17,10 @@ const DashboardPage: NextPage = () => {
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [selectedRoomName, setSelectedRoomName] = useState<string>("");
+  const [token, setToken] = useState<string>();
   const getServers = trpc.useQuery(["user.getServers", { userId: user.id }]);
   const createRoom = trpc.useMutation(["server.createRoom"]);
+  const joinRoom = trpc.useMutation("server.joinRoom");
   const getRooms = trpc.useQuery(["server.getRooms", { serverId: SERVER_ID }]);
   const router = useRouter();
 
@@ -44,9 +46,15 @@ const DashboardPage: NextPage = () => {
     await getRooms.refetch();
   };
 
-  const handleRoomSelected = (room: Room) => {
+  const handleRoomSelected = async (room: Room) => {
+    const token = await joinRoom.mutateAsync({
+      userId: user.id,
+      roomId: room.id,
+    });
+
     setSelectedRoomId(room.id);
     setSelectedRoomName(room.name);
+    setToken(token);
   };
 
   return (
@@ -83,8 +91,9 @@ const DashboardPage: NextPage = () => {
           </Button>
         </div>
         <div className="flex-grow bg-gray-300 h-full p-4">
-          {selectedRoomId && selectedRoomName && (
+          {selectedRoomId && selectedRoomName && token && (
             <ChatPanel
+              token={token}
               selectedRoomName={selectedRoomName}
               selectedRoomId={selectedRoomId}
             />

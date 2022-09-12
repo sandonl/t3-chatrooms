@@ -8,30 +8,45 @@ import { UserPanel } from "./UserPanel";
 type ChatPanelProps = {
   selectedRoomName: string;
   selectedRoomId: string;
+  token: string;
+};
+
+type Message = {
+  text: string;
+  userId: string;
+  name: string;
 };
 
 export const ChatPanel = ({
   selectedRoomName,
   selectedRoomId,
+  token,
 }: ChatPanelProps) => {
   const { user } = useContext(UserContext);
   const [text, setText] = useState<string>();
-  const [messages, setMessages] = useState<any[]>([]);
-  const joinRoom = trpc.useMutation("server.joinRoom");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [roomChannel, setRoomChannel] = useState<RtmChannel>();
 
   const handleChatTyped = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!roomChannel) return;
     if (!text) return;
-    roomChannel.sendMessage({ text: text });
+    roomChannel.sendMessage({
+      text: JSON.stringify({
+        text,
+        userId: user.id,
+        name: user.name,
+      }),
+    });
     setMessages((prevMessages) => [
       {
         text,
         userId: user.id,
+        name: user.name,
       },
       ...prevMessages,
     ]);
@@ -41,11 +56,6 @@ export const ChatPanel = ({
   useEffect(() => {
     const connectToRoom = async () => {
       const { default: AgoraRTM } = await import("agora-rtm-sdk");
-
-      const token = await joinRoom.mutateAsync({
-        userId: user.id,
-        roomId: selectedRoomId,
-      });
 
       // Create Agora client
       const client = AgoraRTM.createInstance(process.env.NEXT_PUBLIC_AGORA_ID!);
@@ -60,10 +70,11 @@ export const ChatPanel = ({
 
       channel.on("ChannelMessage", (message, peerId) => {
         // Track messages
+        if (!message.text) return;
+        const messageObj = JSON.parse(message.text);
         setMessages((prevMessages) => [
           {
-            text: message.text,
-            userId: peerId,
+            ...messageObj,
           },
           ...prevMessages,
         ]);
@@ -98,22 +109,22 @@ export const ChatPanel = ({
         <div className="h-56 bg-white rounded-md w-11/12 border m-1 flex flex-col-reverse">
           {messages.map((message, idx) => (
             <div key={idx} className="px-4 py-2">
-              {message.text}
+              {message.name}: {message.text}
             </div>
           ))}
         </div>
 
-        <div className="flex gap-4 middle p-4 align-text-bottom items-center">
+        <div className="flex flex-nowrap gap-4 middle p-4 align-text-bottom items-center">
           <div> {user.name}</div>
-          <input
-            onChange={handleChatTyped}
-            value={text}
-            placeholder="Type a message here."
-            className="h-10 rounded-md p-4 flex-grow border"
-          />
-          <Button onClick={handleSendMessage} variant={Variant.Primary}>
-            Send
-          </Button>
+          <form onSubmit={handleSendMessage} className="flex-grow">
+            <input
+              onChange={handleChatTyped}
+              value={text}
+              placeholder="Type a message here."
+              className="h-10 rounded-md p-4 w-10/12 border"
+            />
+            <Button variant={Variant.Primary}>Send</Button>
+          </form>
         </div>
       </div>
       <UserPanel selectedRoomId={selectedRoomId} />
