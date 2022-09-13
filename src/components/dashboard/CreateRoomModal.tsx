@@ -38,7 +38,7 @@ export const CreateRoomModal = ({
             value={roomName}
             onChange={handleOnRoomNameChange}
             placeholder="Your room name"
-            className="border"
+            className="border rounded p-2"
           />
 
           <div className="flex gap-2">

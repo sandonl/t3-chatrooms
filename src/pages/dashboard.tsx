@@ -1,6 +1,5 @@
 import { Room } from "@prisma/client";
-import { router } from "@trpc/server";
-import AgoraRTM, { RtmClient } from "agora-rtm-sdk";
+import { RtmClient } from "agora-rtm-sdk";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
@@ -8,8 +7,6 @@ import { Button, Variant } from "../components/Button";
 import { ChatPanel } from "../components/dashboard/ChatPanel";
 import { CreateRoomModal } from "../components/dashboard/CreateRoomModal";
 import { UserContext } from "../context/UserContext";
-import { roomRouter } from "../server/router/roomRouter";
-import { serverRouter } from "../server/router/serverRouter";
 import { trpc } from "../utils/trpc";
 
 const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4"; // TODO: remove
@@ -17,8 +14,8 @@ const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4"; // TODO: remove
 const DashboardPage: NextPage = () => {
   const { user } = useContext(UserContext);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
-  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
-  const [selectedRoomName, setSelectedRoomName] = useState<string>("");
+  const [selectedRoomId, setSelectedRoomId] = useState<string>();
+  const [selectedRoomName, setSelectedRoomName] = useState<string>();
   const getServers = trpc.useQuery(["user.getServers", { userId: user.id }]);
   const createRoom = trpc.useMutation(["server.createRoom"]);
   const joinRoom = trpc.useMutation("server.joinRoom");
@@ -126,6 +123,8 @@ const DashboardPage: NextPage = () => {
         <div className="flex-grow bg-gray-300 h-full">
           {showChatPanel && (
             <ChatPanel
+              refetchRooms={getRooms.refetch}
+              setSelectedRoomId={setSelectedRoomId}
               client={client}
               selectedRoomName={selectedRoomName}
               selectedRoomId={selectedRoomId}

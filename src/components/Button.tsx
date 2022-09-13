@@ -3,6 +3,7 @@ import React from "react";
 export enum Variant {
   Primary,
   Secondary,
+  InLine,
 }
 
 type ButtonProps = {
@@ -15,6 +16,7 @@ export const Button = ({ children, variant, ...props }: ButtonProps) => {
   const variantColors = {
     [Variant.Primary]: "bg-blue-300 hover:bg-blue-200",
     [Variant.Secondary]: "bg-gray-300 hover:bg-gray-200",
+    [Variant.InLine]: "bg-gray-300 hover:bg-gray-200 py-1",
   };
 
   return (

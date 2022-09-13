@@ -14,6 +14,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   const [user, setUser] = useState<User>({
     id: "",
     name: "",
+    roomId: "",
   });
   return (
     <UserContext.Provider value={{ user, setUser }}>

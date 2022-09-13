@@ -26,7 +26,7 @@ export const roomRouter = createRouter()
       roomId: z.string(),
     }),
     async resolve({ input, ctx }) {
-      const newServer = await ctx.prisma.message.create({
+      const newMessage = await ctx.prisma.message.create({
         data: {
           text: input.text,
           name: input.name,
@@ -34,6 +34,18 @@ export const roomRouter = createRouter()
           roomId: input.roomId,
         },
       });
-      return newServer;
+      return newMessage;
+    },
+  })
+  .mutation("deleteRoom", {
+    input: z.object({
+      roomId: z.string(),
+    }),
+    async resolve({ input, ctx }) {
+      await ctx.prisma.room.delete({
+        where: {
+          id: input.roomId,
+        },
+      });
     },
   });
