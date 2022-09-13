@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { trpc } from "../../utils/trpc";
 
 interface UserPanelProps {

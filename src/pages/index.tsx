@@ -45,7 +45,7 @@ const Home: NextPage = () => {
           <input
             value={username}
             onChange={handleSetUsername}
-            className="p-2 text-xl border rounded-sm"
+            className="p-2 text-xl border rounded-md"
             placeholder="Username"
           />
           <Button variant={Variant.Primary}> Sign In </Button>

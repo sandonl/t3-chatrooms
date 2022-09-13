@@ -117,7 +117,6 @@ export const ChatPanel = ({
         const { channel } = context;
         await channel.leave();
         setRoomChannel(undefined);
-        // setMessages([]);
       });
     };
   }, [selectedRoomId]);

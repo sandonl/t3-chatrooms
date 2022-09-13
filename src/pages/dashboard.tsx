@@ -9,7 +9,7 @@ import { CreateRoomModal } from "../components/dashboard/CreateRoomModal";
 import { UserContext } from "../context/UserContext";
 import { trpc } from "../utils/trpc";
 
-const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4"; // TODO: remove
+const SERVER_ID = "cl7r1sb4x0010fxv77cupvfg4";
 
 const DashboardPage: NextPage = () => {
   const { user } = useContext(UserContext);
@@ -77,12 +77,13 @@ const DashboardPage: NextPage = () => {
   };
 
   const handleRoomSelected = async (room: Room) => {
-    setSelectedRoomId(room.id);
-    setSelectedRoomName(room.name);
+    setSelectedRoomId(undefined);
     await joinRoom.mutateAsync({
       roomId: room.id,
       userId: user.id,
     });
+    setSelectedRoomId(room.id);
+    setSelectedRoomName(room.name);
   };
 
   const showChatPanel = selectedRoomId && selectedRoomName && client;
@@ -103,7 +104,7 @@ const DashboardPage: NextPage = () => {
           ))}
         </div>
         <div className="w-80 bg-gray-400 h-full p-4">
-          <div>Current Server: {SERVER_ID}</div>
+          <div className="font-bold px-4 py-2">Rooms: </div>
           <div className="flex flex-col text-left gap-4 p-4 ">
             {getRooms.data?.map((room) => (
               <div key={room.id}>
